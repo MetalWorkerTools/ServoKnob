@@ -26,42 +26,31 @@ float MapValue(float x, float in_min, float in_max, float out_min, float out_max
   else
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
-// void Swap(long *Long1, long *Long2)
-// {
-//   long *tmp = Long1;
-//   Long1 = Long2;
-//   Long2 = tmp;
-// }
-// void AdjustRange(long *Min, long *Max)
-// {
-//   if (Min > Max)
-//     Swap(Min, Max);
-// }
+void Swap(long *Long1, long *Long2)
+{
+  long *tmp;
+  *tmp = *Long1;
+  *Long1 = *Long2;
+  *Long2 = *tmp;
+}
+void AdjustRange(long *Min, long *Max)
+{
+  if (*Min > *Max)
+    Swap(Min, Max);
+}
 long AdjustValue(long Min, long Max, long Value)
 {
-  if (Min > Max)
-  {
-    long tmp = Min;
-    Min = Max;
-    Max = tmp;
-    // Swap(&Min,&Max);
-  }
+  AdjustRange(&Min, &Max);
   if (Value < Min)
     return Min;
-  if (Value > Max)
+  else if (Value > Max)
     return Max;
-  return Value;
+  else
+    return Value;
 }
-
 bool ValueInRange(long Min, long Max, long Value)
 {
-  // AdjustRange(&Min, &Max);
-  if (Min > Max)
-  {
-    long tmp = Min;
-    Min = Max;
-    Max = tmp;
-  }
+  AdjustRange(&Min, &Max);
   return ((Value >= Min) && (Value <= Max));
 }
 long MaxValue(long Value1, long Value2)

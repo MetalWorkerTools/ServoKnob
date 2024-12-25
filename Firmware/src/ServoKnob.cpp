@@ -475,7 +475,7 @@ void ProcessPWMsignal()
             Setting[ModeRun].Value = RPM; // Set the new RPM setpoint
             // SetupRotaryEncoder(ModeRun);
             // RotaryEncoder.setEncoderValue(RPM);
-            SetActive();                  // Activate the servo
+            SetActive(); // Activate the servo
           }
           CalculateServoAngleAndPulseTime(RPM);
           LastRPM = RPM;
@@ -494,7 +494,7 @@ void ProcessServoPosition()
   static unsigned long DeactivateAtTime = millis() + SERVO_DEACTIVATE_DELAY; // Set timer for deactivating servo
   static uint32_t LastServoPulseTime = -1;
   static bool LastServoActive = ServoActive;
-  static bool ActivateServo = true; // at startup, set the correct position
+  static bool ActivateServo = true;            // at startup, set the correct position
   if (ActivateServo == true)                   // if the servo has not to be disabled
     PinServo.SetLedCpulseTime(ServoPulseTime); // Set the pulse time, shut off time not reached
   else
@@ -615,7 +615,7 @@ void setup(void)
   Version.Show();      // Show the version
   SetupDebouncing();
   PinPWM.AttachInterrupt(ProcessPWMsignalISR); // Attach the PWM input pin to an interrupt handler
-  PinLed.Flash(); // # 5 Show progress
+  PinLed.Flash();                              // # 5 Show progress
   Version.ClearDisplay();
   ShowStatus();
   SetServoInStartPosition();

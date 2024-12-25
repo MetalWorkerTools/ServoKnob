@@ -1,3 +1,6 @@
 
 /.pio
 /Firmware/.pio
+Firmware/lib/clsPin/.gitattributes
+Firmware/lib/u8g2TextBox/.gitattributes
+Firmware/ToDo.txt
