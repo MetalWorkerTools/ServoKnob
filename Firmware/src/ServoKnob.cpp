@@ -347,8 +347,8 @@ void ReadSettings()
   for (int i = 0; i <= LastMode; i++)
   {
     Setting[i].Value = FlashData.getLong(Setting[i].StorageID.c_str(), Setting[i].Value);
+    // Setting[i].ReadFlashData(FlashData); // this does not work, haven't a clue why
   }
-  // DebugString = Setting[ModeRun].Value;
 }
 void WriteSettings()
 {
@@ -450,20 +450,21 @@ void SetNextMode()
   }
   Version.ClearDisplay(); // clear the dislay to remove all previous data
 }
-
 void ProcessPWMsignal()
 {
   static long LastRPM = 0;
+  static bool LastPWMactive = false;
   long Delta = MaxValue(Setting[ModeSetupRPMstep].Value / 2, Setting[ModeSetupServoDeadZone].Value);
   switch (Mode)
   {
   case ModeRun:
     if (PinPWM.PulseProcessed == true) // if there is a new pulse signal to process
     {
-      long DutyCycle = PinPWM.GetPWMdutyCycle(); // Get the pulse dutyclycle
-      long RPM = CalculateServoRPM(DutyCycle);   // Calculate the RPM
-      if (RPM != LastRPM)                        // only process a change once so it can be overruled
-        if (!ValueInRange(LastRPM - Delta, LastRPM + Delta, RPM))
+      LastPWMactive = true;                                       // Signal the the PWM was actvie
+      long DutyCycle = PinPWM.GetPWMdutyCycle();                  // Get the pulse dutyclycle
+      long RPM = CalculateServoRPM(DutyCycle);                    // Calculate the RPM
+      if (RPM != LastRPM)                                         // only process a change once so it can be overruled
+        if (!ValueInRange(LastRPM - Delta, LastRPM + Delta, RPM)) // Do not response to noise
         {
           if (RPM == 0)
           {
@@ -473,18 +474,19 @@ void ProcessPWMsignal()
           else
           {
             Setting[ModeRun].Value = RPM; // Set the new RPM setpoint
-            // SetupRotaryEncoder(ModeRun);
-            // RotaryEncoder.setEncoderValue(RPM);
-            SetActive(); // Activate the servo
+            SetupRotaryEncoder(ModeRun);
           }
           CalculateServoAngleAndPulseTime(RPM);
           LastRPM = RPM;
-          // Setting[ModeRun].Value=RPM;
         }
     }
     else if (!PinPWM.PWMsignalActive())
     {
-      CalculateServoAngleAndPulseTime(-1); // Shutoff the servo
+      if (LastPWMactive) // If there was a change to inactive
+      {
+        LastPWMactive = false;               // signal that this active change has been processed
+        CalculateServoAngleAndPulseTime(-1); // Shutoff the servo
+      }
     }
     PinPWM.PulseProcessed == false; // Prepare for a new pulse;
   }
@@ -509,7 +511,6 @@ void ProcessServoPosition()
   }
   if (millis() > DeactivateAtTime) // if the servo motor has to be disabled to
   {
-    // ActivateServo = false;
     ServoPulseTime = 0;
   }
   PinServo.SetLedCpulseTime(ServoPulseTime); // Set the servo pulse time
@@ -561,47 +562,8 @@ void IRAM_ATTR ProcessPWMsignalISR() // This code analyses the PWM signal by cal
 {
   PinPWM.ProcessPWMsignal();
 }
-void TestPWM()
-{
-  int32_t t = 1500;                      // mid position
-  int32_t f = SERVO_FREQUENCY;           // 50 Hz
-  int32_t min = 1000;                    //-90°
-  int32_t max = 2000;                    // 90°
-  int32_t del = 4;                       // 4 usec each step
-  int32_t delMid = 2000;                 // 2 seconds at mid position
-  int32_t delEnd = 5000;                 // 5 seconds at end position
-  PinPWM.setupLedCpulseTiming(f, min);   // 2048 resolution
-  PinServo.setupLedCpulseTiming(f, min); // 2048 resolution
-  for (int c = 1; c < 3; c++)
-  {
-    ShowStatus;
-    for (int32_t i = min; i < max; i++)
-    {
-      PinPWM.SetLedCpulseTime(i);
-      PinServo.SetLedCpulseTime(i);
-      delay(del);
-      if (i == t)
-        delay(delMid);
-    }
-    PinPWM.SetLedCpulseTime(0);
-    PinServo.SetLedCpulseTime(0);
-    delay(delEnd);
-    for (int32_t i = max; i > min; i--)
-    {
-      PinPWM.SetLedCpulseTime(i);
-      PinServo.SetLedCpulseTime(i);
-      delay(del);
-      if (i == t)
-        delay(delMid);
-    }
-    PinPWM.SetLedCpulseTime(0);
-    PinServo.SetLedCpulseTime(0);
-    delay(delEnd);
-  }
-}
 void setup(void)
 {
-  // Serial.begin(115200);  // Can't use serial because rx/tx pins are used
   PinLed.Flash(); // #1 Show startingup
   FlashData.begin("ServoKnob", false);
   ReadWriteFlashData(true);
@@ -615,17 +577,16 @@ void setup(void)
   Version.Show();      // Show the version
   SetupDebouncing();
   PinPWM.AttachInterrupt(ProcessPWMsignalISR); // Attach the PWM input pin to an interrupt handler
-  PinLed.Flash();                              // # 5 Show progress
+  PinLed.Flash();    
+  delay(1000);                          // Allow some time to read the version
   Version.ClearDisplay();
   ShowStatus();
   SetServoInStartPosition();
 }
-
 void loop(void)
 {
   static bool FirstRun = true;
   unsigned long TimeTimeChanged = micros();
-  // TestPWM();
   ShowStatus();
   ProcessPWMsignal();                 // in CNC mode, process the incoming PWM signal
   ProcessSetpointChanged();           // Process the change of a setpoint, may overrule PWM signal

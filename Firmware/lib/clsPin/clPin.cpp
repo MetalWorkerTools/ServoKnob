@@ -255,7 +255,7 @@ String clsPin::GetPinStateStr()
 }
 bool clsPin::PWMsignalActive(unsigned long MilliSeconds)
 {
-    return ((micros() - PWMlastTimeActive) < MilliSeconds*1000);
+    return ((micros() - PWMlastTimeActive) < MilliSeconds * 1000);
 }
 bool clsPin::PWMsignalActive()
 {
@@ -297,9 +297,9 @@ IRAM_ATTR void clsPin::ProcessPWMsignal()
     {
         // noInterrupts();                                              // Disable interrupt to create atomic operation
         PWMperiodTime = PulselastTimeChanged - PWMlastTimeActive; // Calculate the period time
-        PWMpulseTime = PWMlastTimeInActive - PWMlastTimeActive;      // Calculate the pulse time
-        PWMlastTimeActive = PulselastTimeChanged;                   // save the change, start of pulse = end of period
-        PulseProcessed = true;                                        // signal the recieve of a new PWM pulse
+        PWMpulseTime = PWMlastTimeInActive - PWMlastTimeActive;   // Calculate the pulse time
+        PWMlastTimeActive = PulselastTimeChanged;                 // save the change, start of pulse = end of period
+        PulseProcessed = true;                                    // signal the recieve of a new PWM pulse
         // interrupts();                                                // Allow interrupts
     }
     else // End of pulse
@@ -315,7 +315,7 @@ void clsPin::AttachInterrupt(void (*ISR_callback)(void))
 {
     attachInterrupt(digitalPinToInterrupt(Pin), ISR_callback, CHANGE);
 }
-// This method can not be attached to an interrupt handler.
+// The ProcessPinActiveISR can not be attached to an interrupt handler.
 // It must be called from outside the class.
 // The calling method outside the class must be attached to the interrupt handler
 // example:

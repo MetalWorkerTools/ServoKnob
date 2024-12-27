@@ -1,4 +1,5 @@
 #pragma once
+#include <Preferences.h>
 #include <Arduino.h>
 
 class StorageDataLong
@@ -18,6 +19,8 @@ public:
     StorageDataLong(String ID, String StorageID, String Description, long Value, long MinValue, long MaxValue, long Step, String Unit);
     long GetValue();
     void SetValue(long Value);
+    void ReadFlashData(Preferences FlashData);
+    void WriteFlashData(Preferences FlashData);
 };
 
 float MapValue(float x, float in_min, float in_max, float out_min, float out_max);

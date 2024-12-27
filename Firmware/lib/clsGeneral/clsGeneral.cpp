@@ -19,6 +19,14 @@ void StorageDataLong::SetValue(long Value)
 {
   this->Value = Value / Step;
 }
+void StorageDataLong::ReadFlashData(Preferences FlashData)
+{
+Value = FlashData.getLong(StorageID.c_str(), Value);  // Seems not to work but I have no clue why, Copy this code to the main program
+}
+void StorageDataLong::WriteFlashData(Preferences FlashData)
+{
+FlashData.putLong(StorageID.c_str(), Value); // Seems not to work but I have no clue why, Copy this code to the main program
+}
 float MapValue(float x, float in_min, float in_max, float out_min, float out_max)
 {
   if ((in_max == in_min) || (out_max == out_min))
@@ -28,10 +36,10 @@ float MapValue(float x, float in_min, float in_max, float out_min, float out_max
 }
 void Swap(long *Long1, long *Long2)
 {
-  long *tmp;
-  *tmp = *Long1;
+  long tmp;
+  tmp = *Long1;
   *Long1 = *Long2;
-  *Long2 = *tmp;
+  *Long2 = tmp;
 }
 void AdjustRange(long *Min, long *Max)
 {
