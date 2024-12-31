@@ -450,6 +450,10 @@ void SetNextMode()
   }
   Version.ClearDisplay(); // clear the dislay to remove all previous data
 }
+String DebugStringServoStatus()
+{
+  return (String)ServoActive + ";" + (String)  Setting[ModeRun].Value + ";" + (String)ServoPulseTime;
+}
 void ProcessPWMsignal()
 {
   static long LastRPM = 0;
@@ -460,7 +464,7 @@ void ProcessPWMsignal()
   case ModeRun:
     if (PinPWM.PulseProcessed == true) // if there is a new pulse signal to process
     {
-      LastPWMactive = true;                                       // Signal the the PWM was actvie
+      LastPWMactive = true;                                       // Signal the the PWM was active
       long DutyCycle = PinPWM.GetPWMdutyCycle();                  // Get the pulse dutyclycle
       long RPM = CalculateServoRPM(DutyCycle);                    // Calculate the RPM
       if (RPM != LastRPM)                                         // only process a change once so it can be overruled
@@ -475,9 +479,11 @@ void ProcessPWMsignal()
           {
             Setting[ModeRun].Value = RPM; // Set the new RPM setpoint
             SetupRotaryEncoder(ModeRun);
+            SetActive();
           }
           CalculateServoAngleAndPulseTime(RPM);
           LastRPM = RPM;
+          // DebugString = DebugStringServoStatus();
         }
     }
     else if (!PinPWM.PWMsignalActive())
@@ -486,6 +492,7 @@ void ProcessPWMsignal()
       {
         LastPWMactive = false;               // signal that this active change has been processed
         CalculateServoAngleAndPulseTime(-1); // Shutoff the servo
+        // DebugString = "ShutOff";
       }
     }
     PinPWM.PulseProcessed == false; // Prepare for a new pulse;
@@ -514,6 +521,7 @@ void ProcessServoPosition()
     ServoPulseTime = 0;
   }
   PinServo.SetLedCpulseTime(ServoPulseTime); // Set the servo pulse time
+  // DebugString=(String)ActivateServo + ";" +(String) ServoPulseTime;
 }
 void SetServoInStartPosition()
 {
@@ -577,8 +585,8 @@ void setup(void)
   Version.Show();      // Show the version
   SetupDebouncing();
   PinPWM.AttachInterrupt(ProcessPWMsignalISR); // Attach the PWM input pin to an interrupt handler
-  PinLed.Flash();    
-  delay(1000);                          // Allow some time to read the version
+  PinLed.Flash();
+  delay(1000); // Allow some time to read the version
   Version.ClearDisplay();
   ShowStatus();
   SetServoInStartPosition();
